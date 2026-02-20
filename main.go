@@ -18,18 +18,18 @@ func main() {
 	var model string
 	var run int
 	var dateS string = time.Now().Format("20060102")
-	var parameter string
+	var mode string
 	var maxCount int
 
 	flag.StringVar(&output, "output", ".meteociel/", "Output folder")
 	flag.StringVar(&model, "model", "cfs", "Model name (e.g. cfs)")
 	flag.IntVar(&run, "run", 1, "Model run 1-4")
 	flag.StringVar(&dateS, "date", time.Now().Format("20060102"), "Run date (e.g. 20260219, default: current date)")
-	flag.StringVar(&parameter, "parameter", "1", "Parameter (e.g. 0,1,2,5,9)")
+	flag.StringVar(&mode, "mode", "1", "Mode (e.g. 0,1,2,5,9) for subject of calculation")
 	flag.IntVar(&maxCount, "max", 7296, "Max hours to download (default 7296)")
 	flag.Parse()
 
-	if output == "" || model == "" || run == 0 || dateS == "" || parameter == "" {
+	if output == "" || model == "" || run == 0 || dateS == "" || mode == "" {
 		fmt.Println("Usage:")
 		fmt.Println("  go run main.go -output <folder> -model <model> -date <YYYYMMDDHH> -parameter <param>")
 		return
@@ -43,7 +43,7 @@ func main() {
 		Timeout: 30 * time.Second,
 	}
 
-	saveDir := filepath.Join(output, model, dateS, parameter)
+	saveDir := filepath.Join(output, model, dateS, mode)
 
 	err := os.MkdirAll(saveDir, 0755)
 	if err != nil {
@@ -51,7 +51,7 @@ func main() {
 		return
 	}
 
-	totalFiles := maxCount / 6
+	totalFiles := (maxCount / 6)
 	current := 0
 
 	fallbackDate, err := time.Parse("2006010215", dateS)
@@ -67,6 +67,13 @@ func main() {
 			fmt.Printf("Downloading %d / %d\n", current, totalFiles)
 		}
 
+		filename := fmt.Sprintf("%04d.png", hour)
+		savePath := filepath.Join(saveDir, filename)
+
+		if _, err := os.Stat(savePath); err == nil {
+			continue
+		}
+
 		url := fmt.Sprintf(
 			"%s/%s/runs/%s/run%d/%s-%s-%d.png",
 			baseURL,
@@ -74,16 +81,9 @@ func main() {
 			currentDate,
 			run,
 			model,
-			parameter,
+			mode,
 			hour,
 		)
-
-		filename := fmt.Sprintf("%04d.png", hour)
-		savePath := filepath.Join(saveDir, filename)
-
-		if _, err := os.Stat(savePath); err == nil {
-			continue
-		}
 
 		resp, err := client.Get(url)
 		if err != nil {
