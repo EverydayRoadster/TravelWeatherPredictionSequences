@@ -27,7 +27,7 @@ func main() {
 	flag.StringVar(&model, "model", "cfs", "Model name (e.g. cfs)")
 	flag.IntVar(&run, "run", 1, "Model run 1-4")
 	flag.StringVar(&dateS, "date", time.Now().Format("20060102"), "Run date (e.g. 20260219, default: current date)")
-	flag.StringVar(&mode, "mode", "9", "Mode (e.g. 0,1,2,5,9) for subject of calculation")
+	flag.StringVar(&mode, "mode", "0", "Mode (e.g. 0,1,2,5,9) for subject of calculation")
 	flag.IntVar(&maxCount, "max", 7296, "Max hours to download (default 7296)")
 	flag.Parse()
 
@@ -142,14 +142,14 @@ func main() {
 	switch mode {
 	case "9":
 		for i := 0; i < 4; i++ {
-			err = renderVideo(saveDir, model, dateS, mode, "3", i)
+			err = renderVideo(output, saveDir, model, dateS, mode, "3", i)
 			if err != nil {
 				break
 			}
 		}
 
 	default:
-		err = renderVideo(saveDir, model, dateS, mode, "12", -1)
+		err = renderVideo(output, saveDir, model, dateS, mode, "12", -1)
 	}
 	if err != nil {
 		fmt.Println("Video generation complete.")
@@ -165,7 +165,7 @@ func previousRunDate(date string) (string, error) {
 	return t.Format("2006010215"), nil
 }
 
-func renderVideo(saveDir, model, dateS, mode, framerate string, interleave int) error {
+func renderVideo(output, saveDir, model, dateS, mode, framerate string, interleave int) error {
 	ffmpeg := "ffmpeg"
 	_, err := exec.LookPath(ffmpeg)
 	if err != nil {
@@ -182,9 +182,9 @@ func renderVideo(saveDir, model, dateS, mode, framerate string, interleave int) 
 		"-y")
 	if interleave > -1 {
 		cmd.Args = append(cmd.Args, "-vf", "select='eq(mod(n\\,4)\\,"+strconv.Itoa(interleave)+")',setpts=N/FRAME_RATE/TB")
-		cmd.Args = append(cmd.Args, model+"_"+dateS+"_"+mode+"_"+strconv.Itoa(interleave)+".mp4")
+		cmd.Args = append(cmd.Args, filepath.Join(output, model+"_"+dateS+"_"+mode+"_"+strconv.Itoa(interleave)+".mp4"))
 	} else {
-		cmd.Args = append(cmd.Args, model+"_"+dateS+"_"+mode+".mp4")
+		cmd.Args = append(cmd.Args, filepath.Join(output, model+"_"+dateS+"_"+mode+".mp4"))
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
