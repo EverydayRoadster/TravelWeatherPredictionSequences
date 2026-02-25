@@ -19,13 +19,15 @@ func main() {
 	var output string
 	var model string
 	var run int
-	var dateS string = time.Now().Format("20060102")
+	var dateS string
 	var mode string
 	var maxCount int
+	var noClean bool
 
 	flag.StringVar(&output, "output", ".meteociel/", "Output folder")
 	flag.StringVar(&model, "model", "cfs", "Model name (e.g. cfs)")
 	flag.IntVar(&run, "run", 1, "Model run 1-4")
+	flag.BoolVar(&noClean, "noclean", false, "Prevent cleaning of previous output directories")
 	flag.StringVar(&dateS, "date", time.Now().Format("20060102"), "Run date (e.g. 20260219, default: current date)")
 	flag.StringVar(&mode, "mode", "0", "Mode (e.g. 0,1,2,5,9) for subject of calculation")
 	flag.IntVar(&maxCount, "max", 7296, "Max hours to download (default 7296)")
@@ -37,13 +39,21 @@ func main() {
 		return
 	}
 
-	dateS = dateS + fmt.Sprintf("%02d", (run-1)*6) // append 00,06,12,18 run ...
-
-	baseURL := "https://modeles12.meteociel.fr/modeles"
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
+	if !noClean {
+		// Check for existing directories matching the current date pattern.
+		// If none exist, delete all directories from previous runs.
+		pattern := filepath.Join(output, model, dateS+"*")
+		matches, err := filepath.Glob(pattern)
+		if err == nil && len(matches) == 0 {
+			fmt.Println("Cleaning older outputs before a new daily run")
+			err := os.RemoveAll(filepath.Join(output, model))
+			if err != nil {
+				fmt.Println("Failed to clean output/model/:", err)
+			}
+		}
 	}
+
+	dateS = dateS + fmt.Sprintf("%02d", (run-1)*6) // append 00,06,12,18 run ...
 
 	saveDir := filepath.Join(output, model, dateS, mode)
 
@@ -75,6 +85,12 @@ func main() {
 		if _, err := os.Stat(savePath); err == nil {
 			continue
 		}
+
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+
+		baseURL := "https://modeles12.meteociel.fr/modeles"
 
 		url := fmt.Sprintf(
 			"%s/%s/runs/%s/run%d/%s-%s-%d.png",

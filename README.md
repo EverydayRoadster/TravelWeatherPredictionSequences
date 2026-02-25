@@ -1,24 +1,40 @@
 # Travel Weather Prediction Sequences
 
-Travel Weather Prediction Sequences downloads images from metereological services like meteociel, to have them later combined into an animation.
+Travel Weather Prediction Sequences downloads images from metereological services like meteociel, to have them combined into an animation.
+
+## Features
+
+* **Download** – Fetch PNGs from weather prediction calculation, for a specific model, run and date range.
+* **Organise** – Files are stored under `output/<model>/<date><run>/<mode>/`.
+* **Video** – Renders a video from the images; mode `9` produces four interleaved videos, any other mode produces a single video.
+* **Cache** – Existing images are reused; no re‑download unless the cache is cleared.
+* **Cleanup** – By default stale directories (of previous days) for the current model are removed before a new run.
 
 ## Usage
 
-Travel Weather Prediction Sequences requires go installed on a computer.
+```bash
+# Basic run (downloads and renders video)
+go run github.com/EverydayRoadster/TravelWeatherPredictionSequences@latest \
+  -output ./output \
 
-go run github.com/EverydayRoadster/TravelWeatherPredictionSequences@latest
+# Skip the automatic cleanup of old directories
+# use the 12'o clock run 
+# produce images and animation of the prediction for JetStream
+go run github.com/EverydayRoadster/TravelWeatherPredictionSequences@latest \
+  -output ./output \
+  -run 2 \
+  -mode 5 \
+  -noclean
+```
 
-If no arguments are specified, the program will download images into folder ".meteociel/" .
+| Flag      | Description |
+|-----------|-------------|
+| `-output` | Path to the base folder where the data will be stored. Default: `.meteociel/`. |
+| `-model`  | Name of the model to query (`cfs` is the default and only model supported right now). |
+| `-run`    | Run number of model calculation 1-00h (default), 2-06h, 3-12h, 4-18h |
+| `-mode`   | Mode of Parameters: 0 - Geopotential Height at 500 hPa, 1 - Temperature at 850 hPa, 2 - Precipitation, 5 - Jet Stream, 9 - Temperature at 2 meters |
+| `-noclean`| **New flag** – when present the tool will *not* delete old directories before starting a new run. |
 
-Program arguments available:
+## License
 
-- output - Output folder, defaults to .meteociel/"
-
-- model - defaults to cfs
-
-- run - selects the computation run 1-00h (default), 2-06h, 3-12h, 4-18h
-- date - computation run date in format ("20060102"), defaults to current date. There is a transparent daily fallback to dates up to on month backwards, as to model in itself may publish model data from previous runs
-- mode - 0 - Geopotential Height at 500 hPa, 1 - Temperature at 850 hPa, 2 - Precipitation, 5 - Jet Stream, 9 - Temperature at 2 meters,
-- max maximum hours to predict, defaults to 7296. Download will stop earlier if no more images are available
-
-The program will cache files previously downlaoded.
+MIT © 2026

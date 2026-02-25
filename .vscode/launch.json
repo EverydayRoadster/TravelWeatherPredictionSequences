@@ -11,7 +11,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["-output", "season2026", "-mode", "0"]
+            "args": ["-output", ".meteociel", "-mode", "0", "-run", "1"]
         }
     ]
 }
