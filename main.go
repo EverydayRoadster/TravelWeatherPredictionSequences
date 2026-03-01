@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/term"
@@ -24,7 +25,7 @@ func main() {
 	var maxCount int
 	var noClean bool
 
-	flag.StringVar(&output, "output", ".meteociel/", "Output folder")
+	flag.StringVar(&output, "output", "generated", "Output folder")
 	flag.StringVar(&model, "model", "cfs", "Model name (e.g. cfs)")
 	flag.IntVar(&run, "run", 1, "Model run 1-4")
 	flag.BoolVar(&noClean, "noclean", false, "Prevent cleaning of previous output directories")
@@ -38,24 +39,29 @@ func main() {
 		fmt.Println("  go run main.go -output <folder> -model <model> -date <YYYYMMDDHH> -mode <mode>")
 		return
 	}
+	// make internal downloads less visible
+	modelPath := model
+	if !strings.HasPrefix(modelPath, ".") {
+		modelPath = "." + modelPath
+	}
 
 	if !noClean {
 		// Check for existing directories matching the current date pattern.
 		// If none exist, delete all directories from previous runs.
-		pattern := filepath.Join(output, model, dateS+"*")
+		pattern := filepath.Join(output, modelPath, dateS+"*")
 		matches, err := filepath.Glob(pattern)
 		if err == nil && len(matches) == 0 {
 			fmt.Println("Cleaning older outputs before a new daily run")
-			err := os.RemoveAll(filepath.Join(output, model))
+			err := os.RemoveAll(filepath.Join(output, modelPath))
 			if err != nil {
-				fmt.Println("Failed to clean output/model/:", err)
+				fmt.Println("Failed to clean old downloads:", err)
 			}
 		}
 	}
 
 	dateS = dateS + fmt.Sprintf("%02d", (run-1)*6) // append 00,06,12,18 run ...
 
-	saveDir := filepath.Join(output, model, dateS, mode)
+	saveDir := filepath.Join(output, modelPath, dateS, mode)
 
 	err := os.MkdirAll(saveDir, 0755)
 	if err != nil {
