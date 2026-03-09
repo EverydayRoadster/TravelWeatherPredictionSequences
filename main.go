@@ -204,7 +204,7 @@ func renderVideo(output, saveDir, model, dateS, mode, framerate string, interlea
 		"-y")
 	if interleave > -1 {
 		cmd.Args = append(cmd.Args, "-vf", "select='eq(mod(n\\,4)\\,"+strconv.Itoa(interleave)+")',setpts=N/FRAME_RATE/TB")
-		cmd.Args = append(cmd.Args, filepath.Join(output, model+"_"+dateS+"_"+mode+"_"+strconv.Itoa(interleave)+".mp4"))
+		cmd.Args = append(cmd.Args, filepath.Join(output, model+"_"+mode+"_"+strconv.Itoa(interleave)+".mp4"))
 	} else {
 		cmd.Args = append(cmd.Args, filepath.Join(output, model+"_"+mode+".mp4"))
 	}
